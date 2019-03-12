@@ -49,6 +49,7 @@
 #include "View3DInventorViewer.h"
 
 #include <Base/Console.h>
+#include <Base/UnitsApi.h>
 #include "SoFCSelection.h"
 #include "MainWindow.h"
 #include "Selection.h"
@@ -340,9 +341,9 @@ SoFCSelection::handleEvent(SoHandleEventAction * action)
                 snprintf(buf,512,"Preselected: %s.%s.%s (%f,%f,%f)",documentName.getValue().getString()
                                            ,objectName.getValue().getString()
                                            ,subElementName.getValue().getString()
-                                           ,pp->getPoint()[0]
-                                           ,pp->getPoint()[1]
-                                           ,pp->getPoint()[2]);
+                                           ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                           ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                           ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                 getMainWindow()->showMessage(QString::fromLatin1(buf));
             }
@@ -399,9 +400,9 @@ SoFCSelection::handleEvent(SoHandleEventAction * action)
                             snprintf(buf,512,"Selected: %s.%s.%s (%f,%f,%f)",documentName.getValue().getString()
                                                        ,objectName.getValue().getString()
                                                        ,subElementName.getValue().getString()
-                                                       ,pp->getPoint()[0]
-                                                       ,pp->getPoint()[1]
-                                                       ,pp->getPoint()[2]);
+                                                       ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                                       ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                                       ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                             getMainWindow()->showMessage(QString::fromLatin1(buf));
                         }
@@ -433,9 +434,9 @@ SoFCSelection::handleEvent(SoHandleEventAction * action)
                         snprintf(buf,512,"Selected: %s.%s.%s (%f,%f,%f)",documentName.getValue().getString()
                                                    ,objectName.getValue().getString()
                                                    ,subElementName.getValue().getString()
-                                                   ,pp->getPoint()[0]
-                                                   ,pp->getPoint()[1]
-                                                   ,pp->getPoint()[2]);
+                                                   ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                                   ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                                   ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                         getMainWindow()->showMessage(QString::fromLatin1(buf));
                     }
@@ -564,9 +565,9 @@ SoFCSelection::handleEvent(SoHandleEventAction * action)
                             snprintf(buf,512,"Selected: %s.%s.%s (%f,%f,%f)",documentName.getValue().getString()
                                                        ,objectName.getValue().getString()
                                                        ,subElementName.getValue().getString()
-                                                       ,pp->getPoint()[0]
-                                                       ,pp->getPoint()[1]
-                                                       ,pp->getPoint()[2]);
+                                                       ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                                       ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                                       ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                             getMainWindow()->showMessage(QString::fromLatin1(buf));
                         }
@@ -598,9 +599,9 @@ SoFCSelection::handleEvent(SoHandleEventAction * action)
                         snprintf(buf,512,"Selected: %s.%s.%s (%f,%f,%f)",documentName.getValue().getString()
                                                    ,objectName.getValue().getString()
                                                    ,subElementName.getValue().getString()
-                                                   ,pp->getPoint()[0]
-                                                   ,pp->getPoint()[1]
-                                                   ,pp->getPoint()[2]);
+                                                   ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                                   ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                                   ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                         getMainWindow()->showMessage(QString::fromLatin1(buf));
                     }

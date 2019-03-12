@@ -263,3 +263,41 @@ int UnitsApi::getDecimals()
     return UserPrefDecimals;
 }
 
+double UnitsApi::toPreferred()
+{
+	Base::UnitSystem schema = Base::UnitsApi::getSchema();
+    double factor;
+
+    switch (schema) {
+    	case 0:				// Internal units - mm
+    		factor = 1.0;
+         	break;
+        case 1:
+         	factor = 1000; 	// SI2 - meters
+         	break;
+        case 2:
+         	factor = 25.4; 	// Imperial1 - inches
+         	break;
+        case 3:				// ImperialDecimal - inches
+        	factor = 0.0;
+        	break;
+        case 4:				// Centimeters
+        	factor = 10;
+        	break;
+        case 5:				// ImperialBuilding - feet/inches/fractions
+        	factor = 304.8;
+        	break;
+        case 6:				// Millimeters
+        	factor = 1.0;
+        	break;
+        case 7:				// InperialCivil - feet
+        	factor = 304.8;
+        	break;
+        default:
+         	factor = 1.0;
+         	break;
+         }
+
+    return factor;
+}
+

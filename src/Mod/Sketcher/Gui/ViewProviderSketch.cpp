@@ -1044,6 +1044,7 @@ bool ViewProviderSketch::mouseMove(const SbVec2s &cursorPos, Gui::View3DInventor
             (cursorPos - prvCursorPos).getValue(dx, dy);
             if(std::abs(dx) < dragIgnoredDistance && std::abs(dy) < dragIgnoredDistance)
                 return false;
+            break;
         default:
             break;
     }
@@ -6116,7 +6117,7 @@ void ViewProviderSketch::setPositionText(const Base::Vector2d &Pos, const SbStri
 void ViewProviderSketch::setPositionText(const Base::Vector2d &Pos)
 {
     SbString text;
-    text.sprintf(" (%.1f,%.1f)", Pos.x, Pos.y);
+    text.sprintf(" (%.1f,%.1f)", Pos.x/Base::UnitsApi::toPreferred(), Pos.y/Base::UnitsApi::toPreferred());
     edit->textX->string = text;
     edit->textPos->translation = SbVec3f(Pos.x,Pos.y,zText);
 }

@@ -41,6 +41,7 @@
 #include <Base/Exception.h>
 #include <Base/Console.h>
 #include <Base/Interpreter.h>
+#include <Base/UnitsApi.h>
 #include <App/Application.h>
 #include <App/Document.h>
 #include <App/DocumentObject.h>
@@ -562,7 +563,7 @@ void SelectionSingleton::setPreselectCoord( float x, float y, float z)
     snprintf(buf,512,"Preselected: %s.%s.%s (%f,%f,%f)",CurrentPreselection.pDocName
                                                        ,CurrentPreselection.pObjectName
                                                        ,CurrentPreselection.pSubName
-                                                       ,x,y,z);
+                                                       ,x/Base::UnitsApi::toPreferred(),y/Base::UnitsApi::toPreferred(),z/Base::UnitsApi::toPreferred());
 
     if (getMainWindow())
         getMainWindow()->showMessage(QString::fromLatin1(buf));
@@ -707,7 +708,7 @@ bool SelectionSingleton::addSelection(const char* pDocName, const char* pObjectN
         signalSelectionChanged(Chng);
 
 #ifdef FC_DEBUG
-        Base::Console().Log("Sel : Add Selection \"%s.%s.%s(%f,%f,%f)\"\n",pDocName,pObjectName,pSubName,x,y,z);
+        Base::Console().Log("Sel : Add Selection \"%s.%s.%s(%f,%f,%f)\"\n",pDocName,pObjectName,pSubName,x/Base::UnitsApi::toPreferred(),y/Base::UnitsApi::toPreferred(),z/Base::UnitsApi::toPreferred());
 #endif
 
         // allow selection

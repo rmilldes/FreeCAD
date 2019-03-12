@@ -64,6 +64,11 @@ public:
         QString dummy2;
         return UnitsApi::schemaTranslate(quant, dummy1, dummy2);
     }
+    //! Return conversion factor from internal units for display in sketcher/coordinates in lower panel
+    /*!
+     \return Conversion factor from internal to preferred units
+     */
+    static double toPreferred();
 
     /// generate a value for a quantity with default user preferred system
     static double toDbl(PyObject *ArgObj,const Base::Unit &u=Base::Unit());
@@ -72,7 +77,7 @@ public:
 
     // set the number of decimals
     static void setDecimals(int);
-    // fet the number of decimals
+    // get the number of decimals
     static int getDecimals();
     /// set the application defaults
     //static void setDefaults(void);
