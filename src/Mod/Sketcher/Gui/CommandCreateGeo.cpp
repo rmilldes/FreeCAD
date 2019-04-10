@@ -38,6 +38,8 @@
 #include <Base/Console.h>
 #include <Base/Exception.h>
 #include <Base/Tools.h>
+#include <Base/UnitsSchema.h>
+#include <Base/UnitsApi.h>
 
 #include <App/OriginFeature.h>
 #include <Gui/Action.h>
@@ -312,8 +314,9 @@ public:
             }
         }
         else if (Mode==STATUS_SEEK_Second){
-            float length = (onSketchPos - EditCurve[0]).Length();
+            float length = (onSketchPos - EditCurve[0]).Length()/Base::UnitsApi::toPreferred();
             float angle = (onSketchPos - EditCurve[0]).GetAngle(Base::Vector2d(1.f,0.f));
+
             SbString text;
             text.sprintf(" (%.1f,%.1fdeg)", length, angle * 180 / M_PI);
             setPositionText(onSketchPos, text);
@@ -521,8 +524,8 @@ public:
             }
         }
         else if (Mode==STATUS_SEEK_Second) {
-            float dx = onSketchPos.x - EditCurve[0].x;
-            float dy = onSketchPos.y - EditCurve[0].y;
+            float dx = (onSketchPos.x - EditCurve[0].x)/Base::UnitsApi::toPreferred();
+            float dy = (onSketchPos.y - EditCurve[0].y)/Base::UnitsApi::toPreferred();
             SbString text;
             text.sprintf(" (%.1f x %.1f)", dx, dy);
             setPositionText(onSketchPos, text);
@@ -896,7 +899,7 @@ public:
 
                 sketchgui->drawEdit(EditCurve);
 
-                float length = (EditCurve[1] - EditCurve[0]).Length();
+                float length = (EditCurve[1] - EditCurve[0]).Length()/Base::UnitsApi::toPreferred();
                 float angle = (EditCurve[1] - EditCurve[0]).GetAngle(Base::Vector2d(1.f,0.f));
 
                 SbString text;
@@ -927,7 +930,7 @@ public:
 
                 double theta = Tangent.GetAngle(onSketchPos - EditCurve[0]);
 
-                arcRadius = (onSketchPos - EditCurve[0]).Length()/(2.0*sin(theta));
+                arcRadius = (onSketchPos - EditCurve[0]).Length()/(2.0*sin(theta))/Base::UnitsApi::toPreferred();
 
                 // At this point we need a unit normal vector pointing torwards
                 // the center of the arc we are drawing. Derivation of the formula
@@ -1513,7 +1516,7 @@ public:
             EditCurve[33] = EditCurve[1];
 
             // Display radius and start angle
-            float radius = (onSketchPos - EditCurve[0]).Length();
+            float radius = (onSketchPos - EditCurve[0]).Length()/Base::UnitsApi::toPreferred();
             float angle = atan2f(dy_ , dx_);
 
             SbString text;
@@ -1539,7 +1542,7 @@ public:
             }
 
             // Display radius and arc angle
-            float radius = (onSketchPos - EditCurve[0]).Length();
+            float radius = (onSketchPos - EditCurve[0]).Length()/Base::UnitsApi::toPreferred();
 
             SbString text;
             text.sprintf(" (%.1fR,%.1fdeg)", radius, arcAngle * 180 / M_PI);
@@ -1548,8 +1551,7 @@ public:
             sketchgui->drawEdit(EditCurve);
             if (seekAutoConstraint(sugConstr3, onSketchPos, Base::Vector2d(0.0,0.0))) {
                 renderSuggestConstraintsCursor(sugConstr3);
-                return;
-            }
+                return;            }
         }
         applyCursor();
 
@@ -1774,7 +1776,7 @@ public:
         else if (Mode==STATUS_SEEK_Second) {
             CenterPoint  = EditCurve[0] = (onSketchPos - FirstPoint)/2 + FirstPoint;
             EditCurve[1] = EditCurve[33] = onSketchPos;
-            radius = (onSketchPos - CenterPoint).Length();
+            radius = (onSketchPos - CenterPoint).Length()/Base::UnitsApi::toPreferred();
             double lineAngle = GetPointAngle(CenterPoint, onSketchPos);
 
             // Build a 32 point circle ignoring already constructed points
@@ -1808,7 +1810,7 @@ public:
             try {
                 CenterPoint = EditCurve[30] = GetCircleCenter(FirstPoint, SecondPoint, onSketchPos);
 
-                radius = (SecondPoint - CenterPoint).Length();
+                radius = (SecondPoint - CenterPoint).Length()/Base::UnitsApi::toPreferred();
 
                 double angle1 = GetPointAngle(CenterPoint, FirstPoint);
                 double angle2 = GetPointAngle(CenterPoint, SecondPoint);
@@ -2188,7 +2190,7 @@ public:
             EditCurve[33] = EditCurve[1];
 
             // Display radius for user
-            float radius = (onSketchPos - EditCurve[0]).Length();
+            float radius = (onSketchPos - EditCurve[0]).Length()/Base::UnitsApi::toPreferred();
 
             SbString text;
             text.sprintf(" (%.1fR)", radius);
@@ -2454,7 +2456,7 @@ public:
                 approximateEllipse();
 
                 // Display radius for user
-                float semiMajorRadius = a * 2;
+                float semiMajorRadius = (a * 2)/Base::UnitsApi::toPreferred();
                 SbString text;
                 text.sprintf(" (%.1fR,%.1fR)", semiMajorRadius,semiMajorRadius);
                 setPositionText(onSketchPos, text);
@@ -2473,7 +2475,7 @@ public:
 
                 // Display radius for user
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", a, b);
+                text.sprintf(" (%.1fR,%.1fR)", a/(Base::UnitsApi::toPreferred()), b/(Base::UnitsApi::toPreferred()));
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(editCurve);
@@ -2495,7 +2497,7 @@ public:
                 approximateEllipse();
 
                 // Display radius for user
-                float semiMajorRadius = a * 2;
+                float semiMajorRadius = (a * 2)/Base::UnitsApi::toPreferred();
                 SbString text;
                 text.sprintf(" (%.1fR,%.1fR)", semiMajorRadius,semiMajorRadius);
                 setPositionText(onSketchPos, text);
@@ -2512,7 +2514,7 @@ public:
 
                 // Display radius for user
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", a, b);
+                text.sprintf(" (%.1fR,%.1fR)", a/(Base::UnitsApi::toPreferred()), b/(Base::UnitsApi::toPreferred()));
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(editCurve);
@@ -3266,7 +3268,7 @@ public:
             EditCurve[33] = EditCurve[1];
 
             // Display radius for user
-            float radius = (onSketchPos - EditCurve[0]).Length();
+            float radius = (onSketchPos - EditCurve[0]).Length()/Base::UnitsApi::toPreferred();
 
             SbString text;
             text.sprintf(" (%.1fR,%.1fR)", radius,radius);
@@ -3300,7 +3302,7 @@ public:
 
             // Display radius for user
             SbString text;
-            text.sprintf(" (%.1fR,%.1fR)", a, b);
+            text.sprintf(" (%.1fR,%.1fR)", a/(Base::UnitsApi::toPreferred()), b/(Base::UnitsApi::toPreferred()));
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -3339,7 +3341,7 @@ public:
 
             // Display radii and angle for user
             SbString text;
-            text.sprintf(" (%.1fR,%.1fR,%.1fdeg)", a, b, arcAngle * 180 / M_PI);
+            text.sprintf(" (%.1fR,%.1fR,%.1fdeg)", a/(Base::UnitsApi::toPreferred()), b/(Base::UnitsApi::toPreferred()), arcAngle * 180 / M_PI);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -3631,10 +3633,10 @@ public:
             EditCurve[1]= onSketchPos;
 
             // Display radius for user
-            float radius = (onSketchPos - centerPoint).Length();
+            float radius = (onSketchPos - centerPoint).Length()/Base::UnitsApi::toPreferred();
 
             SbString text;
-            text.sprintf(" (%.1fR,%.1fR)", radius,radius);
+            text.sprintf(" (%.1fR,%.1fR)", radius, radius);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -3665,7 +3667,7 @@ public:
 
                 // Display radius for user
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", a, b);
+                text.sprintf(" (%.1fR,%.1fR)", a/(Base::UnitsApi::toPreferred()), b/(Base::UnitsApi::toPreferred()));
                 setPositionText(onSketchPos, text);
             }
 
@@ -4016,7 +4018,7 @@ public:
             EditCurve[1]= onSketchPos;
 
             // Display radius for user
-            float radius = (onSketchPos - focusPoint).Length();
+            float radius = (onSketchPos - focusPoint).Length()/Base::UnitsApi::toPreferred();
 
             SbString text;
             text.sprintf(" (F%.1f)", radius);
@@ -4029,7 +4031,7 @@ public:
             }
         }
         else if (Mode==STATUS_SEEK_Third) {
-            double focal = (axisPoint-focusPoint).Length();
+            double focal = (axisPoint-focusPoint).Length()/Base::UnitsApi::toPreferred();
             double phi = atan2(focusPoint.y-axisPoint.y,focusPoint.x-axisPoint.x);
 
             // P(U) = O + U*U/(4.*F)*XDir + U*YDir
@@ -4062,7 +4064,7 @@ public:
             }
         }
         else if (Mode==STATUS_SEEK_Fourth) {
-            double focal = (axisPoint-focusPoint).Length();
+            double focal = (axisPoint-focusPoint).Length()/Base::UnitsApi::toPreferred();
             double phi = atan2(focusPoint.y-axisPoint.y,focusPoint.x-axisPoint.x);
 
             // P(U) = O + U*U/(4.*F)*XDir + U*YDir
@@ -4512,7 +4514,7 @@ public:
 
             sketchgui->drawEdit(EditCurve);
 
-            float length = (EditCurve[EditCurve.size()-1] - EditCurve[EditCurve.size()-2]).Length();
+            float length = (EditCurve[EditCurve.size()-1] - EditCurve[EditCurve.size()-2]).Length()/Base::UnitsApi::toPreferred();
             float angle = (EditCurve[EditCurve.size()-1] - EditCurve[EditCurve.size()-2]).GetAngle(Base::Vector2d(1.f,0.f));
 
             SbString text;
@@ -5127,7 +5129,7 @@ public:
                     CenterPoint  = EditCurve[N+1] = (onSketchPos - FirstPoint)/2 + FirstPoint;
                 else
                     CenterPoint = EditCurve[N+1] = GetCircleCenter(FirstPoint, SecondPoint, onSketchPos);
-                radius = (onSketchPos - CenterPoint).Length();
+                radius = (onSketchPos - CenterPoint).Length()/Base::UnitsApi::toPreferred();
                 double lineAngle = GetPointAngle(CenterPoint, onSketchPos);
 
                 // Build a N point circle
@@ -7003,7 +7005,7 @@ public:
             //EditCurve[34] = EditCurve[0];
 
             SbString text;
-            text.sprintf(" (%.1fR %.1fL)", r,lx);
+            text.sprintf(" (%.1fR %.1fL)", r/(Base::UnitsApi::toPreferred()),lx/(Base::UnitsApi::toPreferred()));
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -7271,7 +7273,7 @@ public:
             }
 
             // Display radius for user
-            const float radius = dV.Length();
+            const float radius = dV.Length()/Base::UnitsApi::toPreferred();
             const float angle = ( 180.0 / M_PI ) * atan2( dV.y, dV.x );
 
             SbString text;

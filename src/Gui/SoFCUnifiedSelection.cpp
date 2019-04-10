@@ -76,6 +76,7 @@
 #include <QtOpenGL.h>
 
 #include <Base/Console.h>
+#include <Base/UnitsApi.h>
 #include <App/Application.h>
 #include <App/Document.h>
 #include <Gui/Document.h>
@@ -494,9 +495,9 @@ SoFCUnifiedSelection::handleEvent(SoHandleEventAction * action)
                                            ,documentName.c_str()
                                            ,objectName.c_str()
                                            ,subElementName.c_str()
-                                           ,pp->getPoint()[0]
-                                           ,pp->getPoint()[1]
-                                           ,pp->getPoint()[2]);
+                                           ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                           ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                           ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                 getMainWindow()->showMessage(QString::fromUtf8(buf));
 
@@ -600,9 +601,9 @@ SoFCUnifiedSelection::handleEvent(SoHandleEventAction * action)
                                                        ,documentName.c_str()
                                                        ,objectName.c_str()
                                                        ,subElementName.c_str()
-                                                       ,pp->getPoint()[0]
-                                                       ,pp->getPoint()[1]
-                                                       ,pp->getPoint()[2]);
+                                                       ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                                       ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                                       ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                             getMainWindow()->showMessage(QString::fromLatin1(buf));
                         }
@@ -639,9 +640,9 @@ SoFCUnifiedSelection::handleEvent(SoHandleEventAction * action)
                                                    ,documentName.c_str()
                                                    ,objectName.c_str()
                                                    ,subElementName.c_str()
-                                                   ,pp->getPoint()[0]
-                                                   ,pp->getPoint()[1]
-                                                   ,pp->getPoint()[2]);
+                                                   ,pp->getPoint()[0]/Base::UnitsApi::toPreferred()
+                                                   ,pp->getPoint()[1]/Base::UnitsApi::toPreferred()
+                                                   ,pp->getPoint()[2]/Base::UnitsApi::toPreferred());
 
                         getMainWindow()->showMessage(QString::fromLatin1(buf));
                     }
