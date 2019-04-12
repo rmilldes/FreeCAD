@@ -679,12 +679,13 @@ def insert(filename,docname,skip=[],only=[],root=None):
                         if DEBUG: print("clone ",end="")
                     else:
                         if GET_EXTRUSIONS and (MERGE_MODE_ARCH != 1):
-                            if ptype in ["IfcWall","IfcWallStandardCase"]:
+                            if ptype in ["IfcWall","IfcWallStandardCase","IfcSpace"]:
                                 sortmethod = "z"
                             else:
                                 sortmethod = "area"
                             ex = Arch.getExtrusionData(shape,sortmethod) # is this an extrusion?
                             if ex:
+                                #print("found extrusion:",ex)
                                 # check for extrusion profile
                                 baseface = None
                                 profileid = None
@@ -837,9 +838,16 @@ def insert(filename,docname,skip=[],only=[],root=None):
                 a = obj.IfcData
                 a["IfcUID"] = str(guid)
                 obj.IfcData = a
+                
+            # setting IFC attributes
+
                 for attribute in ArchIFCSchema.IfcProducts[product.is_a()]["attributes"]:
-                    if hasattr(product, attribute["name"]) and getattr(product, attribute["name"]):
+                    #print("attribute:",attribute["name"])
+                    if hasattr(product, attribute["name"]) and getattr(product, attribute["name"]) and hasattr(obj,attribute["name"]):
+                        #print("Setting attribute",attribute["name"],"to",getattr(product, attribute["name"]))
                         setattr(obj, attribute["name"], getattr(product, attribute["name"]))
+                        # TODO: ArchIFCSchema.IfcProducts uses the IFC version from the FreeCAD prefs. 
+                        # This might not coincide with the file being opened, hence some attributes are not properly read.
 
             if obj:
                 s = ""
@@ -902,6 +910,7 @@ def insert(filename,docname,skip=[],only=[],root=None):
             # handle properties
 
             if pid in properties:
+
                 if IMPORT_PROPERTIES and hasattr(obj,"IfcProperties"):
 
                     # treat as spreadsheet (pref option)
@@ -954,6 +963,7 @@ def insert(filename,docname,skip=[],only=[],root=None):
 
                     d = obj.IfcProperties
                     for pset in properties[pid].keys():
+                        #print("adding pset",pset,"to object",obj.Label)
                         psetname = ifcfile[pset].Name
                         if six.PY2:
                             psetname = psetname.encode("utf8")
@@ -973,7 +983,7 @@ def insert(filename,docname,skip=[],only=[],root=None):
                                 if hasattr(e.NominalValue,'Unit'):
                                     if e.NominalValue.Unit:
                                         pvalue += e.NominalValue.Unit
-                                d[pname] = psetname+";;"+ptype+";;"+pvalue
+                                d[pname+";;"+psetname] = ptype+";;"+pvalue
                                 #print("adding property: ",pname,ptype,pvalue," pset ",psetname)
                     obj.IfcProperties = d
 
@@ -1480,13 +1490,15 @@ class recycler:
                 self.rgbs[key] = c
             return c
 
-    def createIfcSurfaceStyleRendering(self,col):
-        key = (col.Red,col.Green,col.Blue)
+    def createIfcSurfaceStyleRendering(self,col,trans=0):
+        key = (col.Red,col.Green,col.Blue,trans)
         if self.compress and key in self.ssrenderings:
             self.spared += 1
             return self.ssrenderings[key]
         else:
-            c = self.ifcfile.createIfcSurfaceStyleRendering(col,None,None,None,None,None,None,None,"FLAT")
+            if trans == 0:
+                trans = None
+            c = self.ifcfile.createIfcSurfaceStyleRendering(col,trans,None,None,None,None,None,None,"FLAT")
             if self.compress:
                 self.ssrenderings[key] = c
             return c
@@ -1502,7 +1514,7 @@ class recycler:
                 self.transformationoperators[key] = c
             return c
 
-    def createIfcSurfaceStyle(self,name,r,g,b):
+    def createIfcSurfaceStyle(self,name,r,g,b,t=0):
         if name:
             key = name + str((r,g,b))
         else:
@@ -1512,22 +1524,22 @@ class recycler:
             return self.sstyles[key]
         else:
             col = self.createIfcColourRgb(r,g,b)
-            ssr = self.createIfcSurfaceStyleRendering(col)
+            ssr = self.createIfcSurfaceStyleRendering(col,t)
             c = self.ifcfile.createIfcSurfaceStyle(name,"BOTH",[ssr])
             if self.compress:
                 self.sstyles[key] = c
             return c
 
-    def createIfcPresentationStyleAssignment(self,name,r,g,b):
+    def createIfcPresentationStyleAssignment(self,name,r,g,b,t=0):
         if name:
-            key = name+str((r,g,b))
+            key = name+str((r,g,b,t))
         else:
-            key = str((r,g,b))
+            key = str((r,g,b,t))
         if self.compress and key in self.psas:
             self.spared += 1
             return self.psas[key]
         else:
-            iss = self.createIfcSurfaceStyle(name,r,g,b)
+            iss = self.createIfcSurfaceStyle(name,r,g,b,t)
             c = self.ifcfile.createIfcPresentationStyleAssignment([iss])
             if self.compress:
                 self.psas[key] = c
@@ -1599,7 +1611,7 @@ def export(exportList,filename):
                     annotations.append(obj)
     # clean objects list of unwanted types
     objectslist = [obj for obj in objectslist if obj not in annotations]
-    objectslist = Arch.pruneIncluded(objectslist)
+    objectslist = Arch.pruneIncluded(objectslist,strict=True)
     objectslist = [obj for obj in objectslist if Draft.getType(obj) not in ["Material","MaterialContainer","WorkingPlaneProxy"]]
     if FULL_PARAMETRIC:
         objectslist = Arch.getAllChildren(objectslist)
@@ -1816,27 +1828,39 @@ def export(exportList,filename):
                     psets = {}
                     for key,value in obj.IfcProperties.items():
 
-                            # properties in IfcProperties dict are stored as "key":"pset;;type;;value" or "key":"type;;value"
+                            # in 0.18, properties in IfcProperties dict are stored as "key":"pset;;type;;value" or "key":"type;;value"
+                            # in 0.19, key = name;;pset, value = ptype;;value (because there can be several props with same name)
 
+                            pset = None
+                            pname = key
+                            if ";;" in pname:
+                                pname = key.split(";;")[0]
+                                pset = key.split(";;")[-1]
                             value = value.split(";;")
                             if len(value) == 3:
                                 pset = value[0]
                                 ptype = value[1]
                                 pvalue = value[2]
                             elif len(value) == 2:
-                                pset = "Default property set"
+                                if not pset:
+                                    pset = "Default property set"
                                 ptype = value[0]
                                 pvalue = value[1]
                             else:
-                                if DEBUG:print("      unable to export property:",key,value)
+                                if DEBUG:print("      unable to export property:",pname,value)
                                 continue
 
-                            #if DEBUG: print("      property ",key," : ",pvalue.encode("utf8"), " (", str(ptype), ") in ",pset)
+                            #if DEBUG: print("      property ",pname," : ",pvalue.encode("utf8"), " (", str(ptype), ") in ",pset)
                             if ptype in ["IfcLabel","IfcText","IfcIdentifier",'IfcDescriptiveMeasure']:
                                 if six.PY2:
                                     pvalue = pvalue.encode("utf8")
                             elif ptype == "IfcBoolean":
                                 if pvalue == ".T.":
+                                    pvalue = True
+                                else:
+                                    pvalue = False
+                            elif ptype == "IfcLogical":
+                                if pvalue.upper() == "TRUE":
                                     pvalue = True
                                 else:
                                     pvalue = False
@@ -1851,8 +1875,8 @@ def export(exportList,filename):
                                     except:
                                         if six.PY2:
                                             pvalue = pvalue.encode("utf8")
-                                        if DEBUG:print("      warning: unable to export property as numeric value:",key,pvalue)
-                            p = ifcbin.createIfcPropertySingleValue(str(key),str(ptype),pvalue)
+                                        if DEBUG:print("      warning: unable to export property as numeric value:",pname,pvalue)
+                            p = ifcbin.createIfcPropertySingleValue(str(pname),str(ptype),pvalue)
                             psets.setdefault(pset,[]).append(p)
                     for pname,props in psets.items():
                         pset = ifcfile.createIfcPropertySet(ifcopenshell.guid.compress(uuid.uuid1().hex),history,pname,None,props)
@@ -1928,7 +1952,7 @@ def export(exportList,filename):
                 #if DEBUG : print("      adding ifc attributes")
                 props = []
                 for key in obj.IfcData:
-                    if not (key in ["IfcUID","FlagForceBrep"]):
+                    if not (key in ["attributes","IfcUID","FlagForceBrep"]):
 
                         # (deprecated) properties in IfcData dict are stored as "key":"type(value)"
 
@@ -2405,6 +2429,8 @@ def exportIfcAttributes(obj, kwargs):
             value = obj.getPropertyByName(property)
             if isinstance(value, FreeCAD.Units.Quantity):
                 value = float(value)
+                if property in ["ElevationWithFlooring","Elevation"]:
+                    value = value/1000 # some properties must be changed to meters
             kwargs.update({ property: value })
     return kwargs
 
@@ -2962,24 +2988,32 @@ def getRepresentation(ifcfile,context,obj,forcebrep=False,subtraction=False,tess
             # is named after it. Revit will treat surfacestyles as materials (and discard
             # actual ifcmaterial)
             key = None
-            rgb = obj.ViewObject.ShapeColor[:3]
-            if hasattr(obj,"Material"):
-                if obj.Material:
-                    key = obj.Material.Name
-            if not key:
-                key = rgb
-            if key in surfstyles:
-                psa = surfstyles[key]
-            else:
-                m = None
+            rgbt = [obj.ViewObject.ShapeColor[:3]+(obj.ViewObject.Transparency/100.0,) for shape in shapes]
+            if hasattr(obj.ViewObject,"DiffuseColor") \
+            and obj.ViewObject.DiffuseColor \
+            and (len(obj.ViewObject.DiffuseColor) == len(obj.Shape.Faces)) \
+            and (len(obj.Shape.Solids) == len(shapes)):
+                i = 0
+                rgbt = []
+                for sol in obj.Shape.Solids:
+                    rgbt.append(obj.ViewObject.DiffuseColor[i])
+                    i += len(sol.Faces)
+            for i,shape in enumerate(shapes):
+                key = rgbt[i]
                 if hasattr(obj,"Material"):
                     if obj.Material:
-                        m = obj.Material.Label
-                        if six.PY2:
-                            m = m.encode("utf8")
-                psa = ifcbin.createIfcPresentationStyleAssignment(m,rgb[0],rgb[1],rgb[2])
-                surfstyles[key] = psa
-            for shape in shapes:
+                        key = obj.Material.Name #TODO handle multimaterials
+                if key in surfstyles:
+                    psa = surfstyles[key]
+                else:
+                    m = None
+                    if hasattr(obj,"Material"):
+                        if obj.Material:
+                            m = obj.Material.Label
+                            if six.PY2:
+                                m = m.encode("utf8")
+                    psa = ifcbin.createIfcPresentationStyleAssignment(m,rgbt[i][0],rgbt[i][1],rgbt[i][2],rgbt[i][3])
+                    surfstyles[key] = psa
                 isi = ifcfile.createIfcStyledItem(shape,[psa],None)
 
         xvc = ifcbin.createIfcDirection((1.0,0.0,0.0))
