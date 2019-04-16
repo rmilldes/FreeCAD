@@ -3556,8 +3556,8 @@ class _Dimension(_DraftObject):
     def onChanged(self,obj,prop):
         if hasattr(obj,"Distance"):
             obj.setEditorMode('Distance',1)
-        if hasattr(obj,"Normal"):
-            obj.setEditorMode('Normal',2)
+        #if hasattr(obj,"Normal"):
+        #    obj.setEditorMode('Normal',2)
         if hasattr(obj,"Support"):
             obj.setEditorMode('Support',2)
 
@@ -6774,10 +6774,7 @@ class ViewProviderDraftText:
         self.onChanged(vobj,"LineSpacing")
 
     def getDisplayModes(self,vobj):
-        return ["2D text","3D text"]
-
-    def getDefaultDisplayMode(self):
-        return "3D text"
+        return ["3D text","2D text"]
 
     def setDisplayMode(self,mode):
         return mode
