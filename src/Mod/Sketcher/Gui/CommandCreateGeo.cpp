@@ -37,6 +37,7 @@
 #include <Base/Console.h>
 #include <Base/Exception.h>
 #include <Base/Tools.h>
+#include <Base/UnitsApi.h>
 
 #include <App/OriginFeature.h>
 #include <Gui/Action.h>
@@ -150,6 +151,12 @@ bool isCreateGeoActive(Gui::Document *doc)
     }
     return false;
 }
+
+//Quantity defaultLength = (1.0,"mm");
+//QString dummy;
+//double convFactor;
+//QString dummyUnitString;
+//Base::Quantity dummyQuantity(1.0, Base::Quantity::getUnit(Base::Unit::Length));
 
 SketcherGui::ViewProviderSketch* getSketchViewprovider(Gui::Document *doc)
 {
@@ -313,8 +320,15 @@ public:
         else if (Mode==STATUS_SEEK_Second){
             float length = (onSketchPos - EditCurve[0]).Length();
             float angle = (onSketchPos - EditCurve[0]).GetAngle(Base::Vector2d(1.f,0.f));
+        
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(length, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+        
             SbString text;
-            text.sprintf(" (%.1f,%.1fdeg)", length, angle * 180 / M_PI);
+            text.sprintf(" (%.1f,%.1fdeg)", length/convFactor, angle * 180 / M_PI);
             setPositionText(onSketchPos, text);
 
             EditCurve[1] = onSketchPos;
@@ -521,8 +535,13 @@ public:
         else if (Mode==STATUS_SEEK_Second) {
             float dx = onSketchPos.x - EditCurve[0].x;
             float dy = onSketchPos.y - EditCurve[0].y;
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(dx, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
             SbString text;
-            text.sprintf(" (%.1f x %.1f)", dx, dy);
+            text.sprintf(" (%.1f x %.1f)", dx/convFactor, dy/convFactor);
             setPositionText(onSketchPos, text);
 
             EditCurve[2] = onSketchPos;
@@ -896,9 +915,14 @@ public:
 
                 float length = (EditCurve[1] - EditCurve[0]).Length();
                 float angle = (EditCurve[1] - EditCurve[0]).GetAngle(Base::Vector2d(1.f,0.f));
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(length, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
 
                 SbString text;
-                text.sprintf(" (%.1f,%.1fdeg)", length, angle * 180 / M_PI);
+                text.sprintf(" (%.1f,%.1fdeg)", length/convFactor, angle * 180 / M_PI);
                 setPositionText(EditCurve[1], text);
 
                 if (TransitionMode == TRANSITION_MODE_Free) {
@@ -926,6 +950,11 @@ public:
                 double theta = Tangent.GetAngle(onSketchPos - EditCurve[0]);
 
                 arcRadius = (onSketchPos - EditCurve[0]).Length()/(2.0*sin(theta));
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(arcRadius, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
 
                 // At this point we need a unit normal vector pointing towards
                 // the center of the arc we are drawing. Derivation of the formula
@@ -976,7 +1005,7 @@ public:
                 sketchgui->drawEdit(EditCurve);
 
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fdeg)", std::abs(arcRadius), arcAngle * 180 / M_PI);
+                text.sprintf(" (%.1fR,%.1fdeg)", std::abs(arcRadius)/convFactor, arcAngle * 180 / M_PI);
                 setPositionText(onSketchPos, text);
 
                 if (seekAutoConstraint(sugConstr2, onSketchPos, Base::Vector2d(0.f,0.f))) {
@@ -1507,9 +1536,14 @@ public:
             // Display radius and start angle
             float radius = (onSketchPos - EditCurve[0]).Length();
             float angle = atan2f(dy_ , dx_);
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
 
             SbString text;
-            text.sprintf(" (%.1fR,%.1fdeg)", radius, angle * 180 / M_PI);
+            text.sprintf(" (%.1fR,%.1fdeg)", radius/convFactor, angle * 180 / M_PI);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -1532,9 +1566,15 @@ public:
 
             // Display radius and arc angle
             float radius = (onSketchPos - EditCurve[0]).Length();
+            
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
 
             SbString text;
-            text.sprintf(" (%.1fR,%.1fdeg)", radius, arcAngle * 180 / M_PI);
+            text.sprintf(" (%.1fR,%.1fdeg)", radius/convFactor, arcAngle * 180 / M_PI);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -1766,6 +1806,12 @@ public:
             radius = (onSketchPos - CenterPoint).Length();
             double lineAngle = GetPointAngle(CenterPoint, onSketchPos);
 
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+
             // Build a 32 point circle ignoring already constructed points
             for (int i=1; i <= 32; i++) {
                 // Start at current angle
@@ -1779,7 +1825,7 @@ public:
             // Display radius and start angle
             // This lineAngle will report counter-clockwise from +X, not relatively
             SbString text;
-            text.sprintf(" (%.1fR,%.1fdeg)", (float) radius, (float) lineAngle * 180 / M_PI);
+            text.sprintf(" (%.1fR,%.1fdeg)", (float) radius/convFactor, (float) lineAngle * 180 / M_PI);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -1798,6 +1844,12 @@ public:
                 CenterPoint = EditCurve[30] = GetCircleCenter(FirstPoint, SecondPoint, onSketchPos);
 
                 radius = (SecondPoint - CenterPoint).Length();
+
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(radius, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
 
                 double angle1 = GetPointAngle(CenterPoint, FirstPoint);
                 double angle2 = GetPointAngle(CenterPoint, SecondPoint);
@@ -1849,7 +1901,7 @@ public:
                 }
 
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fdeg)", (float) radius, (float) arcAngle * 180 / M_PI);
+                text.sprintf(" (%.1fR,%.1fdeg)", (float) radius/convFactor, (float) arcAngle * 180 / M_PI);
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(EditCurve);
@@ -2176,8 +2228,14 @@ public:
             // Display radius for user
             float radius = (onSketchPos - EditCurve[0]).Length();
 
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+
             SbString text;
-            text.sprintf(" (%.1fR)", radius);
+            text.sprintf(" (%.1fR)", radius/convFactor);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -2439,8 +2497,14 @@ public:
 
                 // Display radius for user
                 float semiMajorRadius = a * 2;
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(semiMajorRadius, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", semiMajorRadius,semiMajorRadius);
+                text.sprintf(" (%.1fR,%.1fR)", semiMajorRadius/convFactor, semiMajorRadius/convFactor);
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(editCurve);
@@ -2457,7 +2521,12 @@ public:
 
                 // Display radius for user
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", a, b);
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(a, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+                text.sprintf(" (%.1fR,%.1fR)", a/convFactor, b/convFactor);
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(editCurve);
@@ -2480,8 +2549,13 @@ public:
 
                 // Display radius for user
                 float semiMajorRadius = a * 2;
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(semiMajorRadius, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", semiMajorRadius,semiMajorRadius);
+                text.sprintf(" (%.1fR,%.1fR)", semiMajorRadius/convFactor, semiMajorRadius/convFactor);
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(editCurve);
@@ -2496,7 +2570,12 @@ public:
 
                 // Display radius for user
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", a, b);
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(a, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+                text.sprintf(" (%.1fR,%.1fR)", a/convFactor, b/convFactor);
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(editCurve);
@@ -3246,9 +3325,15 @@ public:
 
             // Display radius for user
             float radius = (onSketchPos - EditCurve[0]).Length();
+                
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
 
             SbString text;
-            text.sprintf(" (%.1fR,%.1fR)", radius,radius);
+            text.sprintf(" (%.1fR,%.1fR)", radius/convFactor, radius/convFactor);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -3279,7 +3364,14 @@ public:
 
             // Display radius for user
             SbString text;
-            text.sprintf(" (%.1fR,%.1fR)", a, b);
+                
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(a, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+            text.sprintf(" (%.1fR,%.1fR)", a/convFactor, b/convFactor);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -3318,7 +3410,14 @@ public:
 
             // Display radii and angle for user
             SbString text;
-            text.sprintf(" (%.1fR,%.1fR,%.1fdeg)", a, b, arcAngle * 180 / M_PI);
+                
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(a, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+            text.sprintf(" (%.1fR,%.1fR,%.1fdeg)", a/convFactor, b/convFactor, arcAngle * 180 / M_PI);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -3605,9 +3704,15 @@ public:
 
             // Display radius for user
             float radius = (onSketchPos - centerPoint).Length();
+                
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
 
             SbString text;
-            text.sprintf(" (%.1fR,%.1fR)", radius,radius);
+            text.sprintf(" (%.1fR,%.1fR)", radius/convFactor, radius/convFactor);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -3638,7 +3743,14 @@ public:
 
                 // Display radius for user
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", a, b);
+                
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(a, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+                
+                text.sprintf(" (%.1fR,%.1fR)", a/convFactor, b/convFactor);
                 setPositionText(onSketchPos, text);
             }
 
@@ -3685,7 +3797,14 @@ public:
 
                 // Display radius for user
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fR)", a, b);
+                
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(a, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+                
+                text.sprintf(" (%.1fR,%.1fR)", a/convFactor, b/convFactor);
                 setPositionText(onSketchPos, text);
             }
             else {
@@ -3990,8 +4109,14 @@ public:
             // Display radius for user
             float radius = (onSketchPos - focusPoint).Length();
 
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
             SbString text;
-            text.sprintf(" (F%.1f)", radius);
+            text.sprintf(" (F%.1f)", radius/convFactor);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -4023,7 +4148,13 @@ public:
 
             // Display radius for user
             SbString text;
-            text.sprintf(" (F%.1f)", focal);
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(focal, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+            text.sprintf(" (F%.1f)", focal/convFactor);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -4065,7 +4196,14 @@ public:
                 }
 
                 SbString text;
-                text.sprintf(" (F%.1f)", focal);
+                
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(focal, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+                text.sprintf(" (F%.1f)", focal/convFactor);
                 setPositionText(onSketchPos, text);
             }
             else {
@@ -4481,7 +4619,14 @@ public:
             float angle = (EditCurve[EditCurve.size()-1] - EditCurve[EditCurve.size()-2]).GetAngle(Base::Vector2d(1.f,0.f));
 
             SbString text;
-            text.sprintf(" (%.1f,%.1fdeg)", length, angle * 180 / M_PI);
+            
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(length, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+            text.sprintf(" (%.1f,%.1fdeg)", length/convFactor, angle * 180 / M_PI);
             setPositionText(EditCurve[EditCurve.size()-1], text);
 
             if (seekAutoConstraint(sugConstr[CurrentConstraint], onSketchPos, Base::Vector2d(0.f,0.f))) {
@@ -5096,7 +5241,14 @@ public:
                 // Display radius and start angle
                 // This lineAngle will report counter-clockwise from +X, not relatively
                 SbString text;
-                text.sprintf(" (%.1fR,%.1fdeg)", (float) radius, (float) lineAngle * 180 / M_PI);
+            
+                double convFactor;
+                QString dummyUnitString;
+
+                Base::Quantity qLength(radius, Base::Unit::Length);
+                Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+                text.sprintf(" (%.1fR,%.1fdeg)", (float) radius/convFactor, (float) lineAngle * 180 / M_PI);
                 setPositionText(onSketchPos, text);
 
                 sketchgui->drawEdit(EditCurve);
@@ -6940,7 +7092,13 @@ public:
             //EditCurve[34] = EditCurve[0];
 
             SbString text;
-            text.sprintf(" (%.1fR %.1fL)", r,lx);
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(dx, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+            text.sprintf(" (%.1fR %.1fL)", r/convFactor, lx/convFactor);
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);
@@ -7212,7 +7370,14 @@ public:
             const float angle = ( 180.0 / M_PI ) * atan2( dV.y, dV.x );
 
             SbString text;
-            text.sprintf(" (%.1fR %.1fdeg)", radius, angle );
+            
+            double convFactor;
+            QString dummyUnitString;
+
+            Base::Quantity qLength(radius, Base::Unit::Length);
+            Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, convFactor, dummyUnitString);
+            
+            text.sprintf(" (%.1fR %.1fdeg)", radius/convFactor, angle );
             setPositionText(onSketchPos, text);
 
             sketchgui->drawEdit(EditCurve);

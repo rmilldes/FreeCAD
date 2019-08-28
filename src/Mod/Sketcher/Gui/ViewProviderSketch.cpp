@@ -274,6 +274,18 @@ const Part::Geometry* GeoById(const std::vector<Part::Geometry*> GeoList, int Id
         return GeoList[GeoList.size()+Id];
 }
 
+// Units conversion helper function
+//
+
+float displayPreferred(const float& value, const Base::Unit &u)
+{
+    double factor= 1.0;
+    QString dummy;
+
+    Base::UnitsApi::UserPrefSystem->schemaTranslate(Base::Quantity(value, u), factor, dummy);
+    return value/factor;
+}
+
 //**************************************************************************
 // Construction/Destruction
 
@@ -6226,7 +6238,12 @@ void ViewProviderSketch::setPositionText(const Base::Vector2d &Pos, const SbStri
 void ViewProviderSketch::setPositionText(const Base::Vector2d &Pos)
 {
     SbString text;
-    text.sprintf(" (%.1f,%.1f)", Pos.x, Pos.y);
+    double factor;
+    QString dummyUnitString;
+
+    Base::Quantity qLength(Pos.x, Base::Unit::Length);
+    Base::UnitsApi::UserPrefSystem->schemaTranslate(qLength, factor, dummyUnitString);
+    text.sprintf(" (%.1f,%.1f)", Pos.x/factor, Pos.y/factor);
     edit->textX->string = text;
     edit->textPos->translation = SbVec3f(Pos.x,Pos.y,zText);
 }

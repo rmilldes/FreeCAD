@@ -74,6 +74,7 @@ namespace Sketcher {
 }
 
 namespace SketcherGui {
+    
 
 class DrawSketchHandler;
 

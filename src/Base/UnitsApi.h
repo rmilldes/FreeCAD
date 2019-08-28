@@ -84,6 +84,7 @@ public:
     static PyMethodDef    Methods[];
 
     static double defaultFactor;
+    static UnitsSchema*  UserPrefSystem;
 
 protected:
     /// return an instance of the given enum value
@@ -91,7 +92,7 @@ protected:
 
 protected:
     // not used at the moment
-    static UnitsSchema *  UserPrefSystem;
+    //static UnitsSchema *  UserPrefSystem;
     static UnitSystem actSystem;
     /// number of decimals for floats
     static int      UserPrefDecimals;
